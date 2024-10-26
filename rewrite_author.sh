@@ -1,14 +1,18 @@
 #!/usr/bin/env bash
 
-# Массив репозиториев
-repositories=(
-    "https://github.com/user/repo1.git"
-    "https://github.com/user/repo2.git"
-    "https://github.com/user/repo3.git"
+# GitHub credentials
+GITHUB_USERNAME="your_username"
+GITHUB_TOKEN="your_personal_access_token"
+
+# Массив репозиториев (только имена репозиториев)
+REPOSITORIES=(
+    "repo1"
+    "repo2"
+    "repo3"
 )
 
 # Массив старых email адресов
-old_emails=(
+OLD_EMAILS=(
     "old_email1@example.com"
     "old_email2@example.com"
     "old_email3@example.com"
@@ -20,16 +24,29 @@ CORRECT_EMAIL="studio@webzaytsev.ru"
 
 # Функция для обработки репозитория
 process_repository() {
-    local repo_url="$1"
-    local repo_name=$(basename "$repo_url" .git)
+    local repo_name="$1"
 
-    echo "Клонирование репозитория $repo_name..."
-    git clone "$repo_url"
-    cd "$repo_name" || exit
+    echo "Обработка репозитория $repo_name..."
+    
+    if [ -d "$repo_name" ]; then
+        echo "Директория $repo_name уже существует. Пропускаем клонирование."
+        cd "$repo_name" || exit
+    else
+        echo "Клонирование репозитория $repo_name..."
+        git clone "https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/${GITHUB_USERNAME}/${repo_name}.git"
+        cd "$repo_name" || exit
+    fi
 
-    for old_email in "${old_emails[@]}"; do
+    # Проверяем, были ли уже внесены изменения
+    if git log -1 --pretty=%B | grep -q "Update author information"; then
+        echo "Изменения уже были внесены. Пропускаем обработку."
+        cd ..
+        return
+    fi
+
+    for old_email in "${OLD_EMAILS[@]}"; do
         echo "Обработка email: $old_email"
-        git filter-branch --env-filter '
+        git filter-branch -f --env-filter '
         OLD_EMAIL="'"$old_email"'"
         CORRECT_NAME="'"$CORRECT_NAME"'"
         CORRECT_EMAIL="'"$CORRECT_EMAIL"'"
@@ -50,12 +67,16 @@ process_repository() {
     git push --force --all
     git push --force --tags
 
+    # Добавляем коммит-маркер
+    git commit --allow-empty -m "Update author information"
+    git push
+
     cd ..
     echo "Обработка репозитория $repo_name завершена."
 }
 
 # Основной цикл обработки репозиториев
-for repo in "${repositories[@]}"; do
+for repo in "${REPOSITORIES[@]}"; do
     process_repository "$repo"
 done
 
