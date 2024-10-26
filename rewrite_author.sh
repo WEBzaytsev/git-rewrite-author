@@ -20,7 +20,7 @@ OLD_EMAILS=(
 
 # Новые данные автора
 CORRECT_NAME="WEBzaytsev"
-CORRECT_EMAIL="studio@webzaytsev.ru"
+CORRECT_EMAIL="nikita@zaitsv.dev"
 
 # Функция для обработки репозитория
 process_repository() {
