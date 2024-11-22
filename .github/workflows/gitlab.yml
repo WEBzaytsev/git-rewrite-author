@@ -1,0 +1,14 @@
+name: Gitlab Sync
+
+on: [push, pull_request, create, delete]
+
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: keninkujovic/gitlab-sync@2.0.0
+      with:
+        gitlab_url: https://git.zaitsv.dev/webzaytsev/git-rewrite-author.git
+        username: webzaytsev
+        gitlab_pat: ${{ secrets.GITLAB_TOKEN }}
